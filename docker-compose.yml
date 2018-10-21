@@ -1,0 +1,18 @@
+version: '3'
+services:
+  nba_api:
+    container_name: nba_api
+    build: ./nba_api_service
+    volumes:
+      - sql_live:/var/data
+
+  flask_app:
+    container_name: web_app
+    build: ./nba_web_app
+    ports:
+      - "8080:80"
+    volumes:
+      - sql_live:/var/data
+
+volumes:
+  sql_live:

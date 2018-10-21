@@ -1,0 +1,22 @@
+<!doctype html>
+<head>
+        <link href="https://bootswatch.com/4/united/bootstrap.min.css" rel="stylesheet">
+</head>
+
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <a class="navbar-brand" href="#">GAES NBA Win Live Standings</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+</nav>
+<div class="jumbotron">
+
+  <h1>NBA Wins</h1>
+  {% for table in tables %}
+    {{ table|safe }}
+  {% endfor %}
+    <hr>
+   {{recent_date}}
+
+</div>

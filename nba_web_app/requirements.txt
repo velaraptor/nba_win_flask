@@ -1,0 +1,7 @@
+jsonschema==2.6.0
+pandas==0.23.4
+python-dateutil==2.7.3
+pytz==2018.5
+pyzmq==17.1.2
+requests==2.20.0
+Flask==1.0.2
