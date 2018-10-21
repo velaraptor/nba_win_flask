@@ -6,7 +6,6 @@ import time
 import sqlite3
 import logging
 
-
 PLAYERS = {0: 'Chris',
            1: 'Luke',
            2: 'Dennis',
@@ -32,6 +31,7 @@ TEAMS = {'TOR': 0, 'PHX': 0, 'IND': 0,
          }
 
 SQL_CONNECTION = "/var/data/nba_win.db"
+START_DATE = "2018-10-16"
 
 
 def get_standings(logger):
@@ -81,35 +81,19 @@ def main():
         teams = teams[['team_abbrev', 'team_id', 'team_nickname']]
 
         standings = standings.merge(teams, left_on='teamId', right_on='team_id')
-
+        standings.loc[:, 'timestamp'] = recent_date
+        standings['timestamp'] = pd.to_datetime(standings['timestamp'])
         standings.loc[:, 'usr'] = standings['team_abbrev'].map(TEAMS).map(PLAYERS)
-
-        standings_agg = standings.groupby('usr')[['win', 'loss']].sum().sort_values(ascending=False, by='win')
-        standings_agg['win_percentage'] = standings_agg['win'] / (standings_agg['win'] + standings_agg['loss'])
-        standings_agg['weighted_rank'] = standings_agg['win_percentage'].rank(ascending=False)
-        standings_agg['raw_rank'] = standings_agg['win'].rank(ascending=False)
-        standings_agg.loc[:, 'timestamp'] = recent_date
-        standings_agg['timestamp'] = pd.to_datetime(standings_agg['timestamp'])
-        standings_agg['user_name'] = standings_agg.index
-        logger.info(standings_agg)
+        logger.info(standings)
         if RUN_SQL is True:
             conn = sqlite3.connect(SQL_CONNECTION)
-            standings_agg.to_sql('standings', con=conn, if_exists='replace')
+            standings.to_sql('standings_raw_single', con=conn, if_exists='replace')
+            standings.to_sql('standings_raw', con=conn, if_exists='replace')
             logger.info('successfully wrote to db')
-            cursor = conn.cursor()
-            cursor.execute('SELECT timestamp FROM standings_history')
-            times = cursor.fetchall()
-            if len(times) > 0:
-                times = pd.to_datetime(pd.DataFrame(times)[0])
-                if sum(standings_agg['timestamp'].isin(times)) == 0:
-                    logger.info('wrote to standing_history table')
-                    standings_agg.to_sql('standings_history', con=conn, if_exists='append')
-            else:
-                logger.info('new iteration putting data in standing_history')
-                standings_agg.to_sql('standings_history', con=conn, if_exists='append')
+            conn.close()
 
-        logger.info('Sleeping for 60 minutes....')
-        time.sleep(60 * 60)
+        logger.info('Sleeping for 24 hours....')
+        time.sleep(60 * 60 * 24)
 
 
 if __name__ == "__main__":

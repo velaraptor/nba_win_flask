@@ -6,6 +6,12 @@ services:
     volumes:
       - sql_live:/var/data
 
+  raw_nba_api:
+    container_name: nba_raw_standings
+    build: ./nba_raw_api_service
+    volumes:
+      - sql_live:/var/data
+
   flask_app:
     container_name: web_app
     build: ./nba_web_app

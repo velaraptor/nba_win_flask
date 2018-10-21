@@ -80,13 +80,21 @@ def path_to_image_html(path):
     return '<img src="' + path + '"  width="100" height="100" />'
 
 
+def path_to_more_stats_html(path):
+    return '<a href="/gaes_teams/' + path + '">' + path + '</a>'
+
+
+def make_row_bold(path):
+    return '<b><font color="#46b957">' + str(path) + '</font></b>'
+
+
 @app.route("/")
 def main():
     conn = sqlite3.connect(SQL_CONNECTION)
     cursor = conn.cursor()
     cursor.execute('SELECT usr, win, loss, win_percentage, weighted_rank, raw_rank FROM standings')
     scores = cursor.fetchall()
-    scores = pd.DataFrame(scores, columns= ['Player', 'Wins', 'Losses', 'Win PCT', 'Weighted Rank', 'Raw Rank'])
+    scores = pd.DataFrame(scores, columns=['Player', 'Wins', 'Losses', 'Win PCT', 'Weighted Rank', 'Raw Rank'])
     cursor.execute('SELECT timestamp FROM standings')
     recent_date = cursor.fetchone()[0]
     recent_date = pd.to_datetime(recent_date)
@@ -95,13 +103,43 @@ def main():
 
     team_images = get_team_images()
     scores = scores.merge(team_images, left_on='Player', right_on='Player')
-    return render_template('view.html', tables=[scores.to_html(index=False, classes='table table-hover',
+    return render_template('view.html', tables=[scores.to_html(index=False, classes=['table table-hover', 'table-light'],
                                                                formatters=dict(Team1=path_to_image_html,
                                                                                Team2=path_to_image_html,
-                                                                               Team3=path_to_image_html),
-                                                               escape=False
+                                                                               Team3=path_to_image_html,
+                                                                               Player=path_to_more_stats_html,
+                                                                               Wins=make_row_bold),
+                                                               escape=False, justify='center', border=3
                                                                ), ],
                            recent_date=recent_date)
+
+
+@app.route('/gaes_teams/<variable>', methods=['GET'])
+def get_team_records(variable):
+    conn = sqlite3.connect(SQL_CONNECTION)
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT win, loss, win_percentage, weighted_rank, raw_rank FROM standings WHERE usr =\'%s\'' %
+                   variable)
+    agg_scores = cursor.fetchall()
+    agg_scores = pd.DataFrame(agg_scores, columns=['Wins', 'Losses', 'Win PCT', 'Weighted Rank', 'Raw Rank'])
+
+    cursor.execute('SELECT win, loss, team_nickname FROM standings_raw_single WHERE usr=\'%s\'' % variable)
+    by_team_scores = cursor.fetchall()
+    by_team_scores = pd.DataFrame(by_team_scores, columns=['Wins', 'Losses', ' Team Name'])
+    team_images = get_team_images()
+    team_images = team_images[team_images['Player']==variable]
+    team_1 = str(team_images['Team1'].values[0])
+    team_2 = str(team_images['Team2'].values[0])
+    team_3 = str(team_images['Team3'].values[0])
+    rank = int(agg_scores['Raw Rank'].values[0])
+    return render_template("team.html", team_table=[by_team_scores.to_html(index=False, classes=['table table-hover',
+                                                                                                 'table-light'],
+                                                                           escape=False, justify='center', border=3), ],
+                           agg_table=[agg_scores.to_html(index=False, classes=['table table-hover', 'table-light'],
+                                                         escape=False,
+                                                         justify='center', border=3), ],
+                           name=variable, team_1=team_1, team_2=team_2, team_3=team_3, rank=rank)
 
 
 if __name__ == "__main__":
