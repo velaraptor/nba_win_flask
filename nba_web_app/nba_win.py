@@ -6,6 +6,12 @@ SQL_CONNECTION = "/var/data/nba_win.db"
 # SQL_CONNECTION_local = "/Users/velaraptor/Desktop/nba_win.db"
 pd.set_option('display.max_colwidth', -1)
 
+GAME_STATUS = {
+    1: "Has not began",
+    2: 'In progress',
+    3: 'FINAL'
+}
+
 PLAYERS = {0: 'Chris',
            1: 'Luke',
            2: 'Dennis',
@@ -102,6 +108,19 @@ def main():
 
     team_images = get_team_images()
     scores = scores.merge(team_images, left_on='Player', right_on='Player')
+
+    cursor.execute('SELECT * FROM scores')
+    scores_live = cursor.fetchall()
+    scores_live = pd.DataFrame(scores_live, columns=[field[0] for field in cursor.description])
+    scores_live = scores_live[['hUser', 'vUser', 'vTeamScore', 'vTeam', 'status', 'hTeamScore', 'hTeam',
+                               'game_activated', 'current_period']]
+
+    scores_live['game'] = scores_live['hUser'] + ' (' + scores_live['hTeam'] + ') - <b>' + scores_live['hTeamScore'] + \
+                          '</b> <br> ' + scores_live['vUser'] + ' (' + scores_live['vTeam'] + ') - <b>' + scores_live['vTeamScore'] + '</b>'
+    scores_live['status'] = scores_live['status'].map(GAME_STATUS)
+
+    scores_live = scores_live[['game', 'current_period', 'status']]
+    scores_live.columns = ['Game', 'Current Period', 'Status']
     return render_template('view.html',
                            tables=[scores.to_html(index=False, classes=['table table-hover', 'table-light'],
                                                   formatters=dict(Team1=path_to_image_html,
@@ -110,7 +129,11 @@ def main():
                                                                   Player=path_to_more_stats_html,
                                                                   Wins=make_row_bold),
                                                   escape=False, justify='center', border=3), ],
-                           recent_date=recent_date)
+                           recent_date=recent_date, scores_live=[scores_live.to_html(index=False,
+                                                                                     classes=['table table-hover',
+                                                                                              'table-light'],
+                                                                                     escape=False, justify='center',
+                                                                                     border=3), ])
 
 
 @app.route('/gaes_teams/<variable>', methods=['GET'])

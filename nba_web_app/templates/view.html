@@ -21,5 +21,10 @@
   {% endfor %}
     <hr>
     <small><i>{{recent_date}}</i></small>
+    <hr>
+    <h1>Today's Games</h1>
+      {% for table in scores_live %}
+        {{ table|safe }}
+      {% endfor %}
 
 </div>
