@@ -98,19 +98,18 @@ def main():
     cursor.execute('SELECT timestamp FROM standings')
     recent_date = cursor.fetchone()[0]
     recent_date = pd.to_datetime(recent_date)
-    recent_date = 'Data recent as of ' + str(recent_date.month) + '/' + str(recent_date.day) + '/' + \
-                  str(recent_date.year)
+    recent_date = 'Data recent as of ' + str(recent_date.strftime('%c'))
 
     team_images = get_team_images()
     scores = scores.merge(team_images, left_on='Player', right_on='Player')
-    return render_template('view.html', tables=[scores.to_html(index=False, classes=['table table-hover', 'table-light'],
-                                                               formatters=dict(Team1=path_to_image_html,
-                                                                               Team2=path_to_image_html,
-                                                                               Team3=path_to_image_html,
-                                                                               Player=path_to_more_stats_html,
-                                                                               Wins=make_row_bold),
-                                                               escape=False, justify='center', border=3
-                                                               ), ],
+    return render_template('view.html',
+                           tables=[scores.to_html(index=False, classes=['table table-hover', 'table-light'],
+                                                  formatters=dict(Team1=path_to_image_html,
+                                                                  Team2=path_to_image_html,
+                                                                  Team3=path_to_image_html,
+                                                                  Player=path_to_more_stats_html,
+                                                                  Wins=make_row_bold),
+                                                  escape=False, justify='center', border=3), ],
                            recent_date=recent_date)
 
 
