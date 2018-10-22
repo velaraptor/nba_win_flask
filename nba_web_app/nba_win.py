@@ -98,7 +98,8 @@ def make_row_bold(path):
 def main():
     conn = sqlite3.connect(SQL_CONNECTION)
     cursor = conn.cursor()
-    cursor.execute('SELECT usr, win, loss, win_percentage, weighted_rank, raw_rank FROM standings')
+    cursor.execute('SELECT usr, win, loss, win_percentage, weighted_rank, raw_rank FROM'
+                   ' standings ORDER BY wins, win_percentage')
     scores = cursor.fetchall()
     scores = pd.DataFrame(scores, columns=['Player', 'Wins', 'Losses', 'Win PCT', 'Weighted Rank', 'Raw Rank'])
     cursor.execute('SELECT timestamp FROM standings')
@@ -115,8 +116,9 @@ def main():
     scores_live = scores_live[['hUser', 'vUser', 'vTeamScore', 'vTeam', 'status', 'hTeamScore', 'hTeam',
                                'game_activated', 'current_period']]
 
-    scores_live['game'] = scores_live['hUser'] + ' (' + scores_live['hTeam'] + ') - <b>' + scores_live['hTeamScore'] + \
-                          '</b> <br> ' + scores_live['vUser'] + ' (' + scores_live['vTeam'] + ') - <b>' + scores_live['vTeamScore'] + '</b>'
+    scores_live['game'] = scores_live['hUser'] + ' (' + scores_live['hTeam'] + ') - <b>' + \
+                          scores_live['hTeamScore'] + '</b> <br> ' + scores_live['vUser'] + \
+                          ' (' + scores_live['vTeam'] + ') - <b>' + scores_live['vTeamScore'] + '</b>'
     scores_live['status'] = scores_live['status'].map(GAME_STATUS)
 
     scores_live = scores_live[['game', 'current_period', 'status']]
