@@ -99,7 +99,7 @@ def main():
     conn = sqlite3.connect(SQL_CONNECTION)
     cursor = conn.cursor()
     cursor.execute('SELECT usr, win, loss, win_percentage, weighted_rank, raw_rank FROM'
-                   ' standings ORDER BY wins, win_percentage')
+                   ' standings ORDER BY win, win_percentage')
     scores = cursor.fetchall()
     scores = pd.DataFrame(scores, columns=['Player', 'Wins', 'Losses', 'Win PCT', 'Weighted Rank', 'Raw Rank'])
     cursor.execute('SELECT timestamp FROM standings')
