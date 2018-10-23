@@ -83,7 +83,7 @@ def get_team_images():
 
 
 def path_to_image_html(path):
-    return '<img src="' + path + '"  width="100" height="100" />'
+    return '<center><img src="' + path + '"  width="100" height="100" /></center>'
 
 
 def path_to_more_stats_html(path):
@@ -99,7 +99,7 @@ def main():
     conn = sqlite3.connect(SQL_CONNECTION)
     cursor = conn.cursor()
     cursor.execute('SELECT usr, win, loss, win_percentage, weighted_rank, raw_rank FROM'
-                   ' standings ORDER BY win, win_percentage')
+                   ' standings ORDER BY win DESC, win_percentage DESC')
     scores = cursor.fetchall()
     scores = pd.DataFrame(scores, columns=['Player', 'Wins', 'Losses', 'Win PCT', 'Weighted Rank', 'Raw Rank'])
     cursor.execute('SELECT timestamp FROM standings')
@@ -130,12 +130,12 @@ def main():
                                                                   Team3=path_to_image_html,
                                                                   Player=path_to_more_stats_html,
                                                                   Wins=make_row_bold),
-                                                  escape=False, justify='center', border=3), ],
+                                                  escape=False, justify='center', border=3).replace('<th>','<th class = "table-info">'), ],
                            recent_date=recent_date, scores_live=[scores_live.to_html(index=False,
                                                                                      classes=['table table-hover',
                                                                                               'table-light'],
                                                                                      escape=False, justify='center',
-                                                                                     border=3), ])
+                                                                                     border=3).replace('<th>','<th class = "table-info">'), ])
 
 
 @app.route('/gaes_teams/<variable>', methods=['GET'])
@@ -159,10 +159,11 @@ def get_team_records(variable):
     rank = int(agg_scores['Raw Rank'].values[0])
     return render_template("team.html", team_table=[by_team_scores.to_html(index=False, classes=['table table-hover',
                                                                                                  'table-light'],
-                                                                           escape=False, justify='center', border=3), ],
+                                                                           escape=False, justify='center', border=3
+                                                                           ).replace('<th>','<th class = "table-info">'), ],
                            agg_table=[agg_scores.to_html(index=False, classes=['table table-hover', 'table-light'],
                                                          escape=False,
-                                                         justify='center', border=3), ],
+                                                         justify='center', border=3).replace('<th>','<th class = "table-info">'), ],
                            name=variable, team_1=team_1, team_2=team_2, team_3=team_3, rank=rank)
 
 
