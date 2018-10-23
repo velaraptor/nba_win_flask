@@ -87,11 +87,19 @@ def path_to_image_html(path):
 
 
 def path_to_more_stats_html(path):
-    return '<a href="/gaes_teams/' + path + '">' + path + '</a>'
+    return '<center><font size=5><a href="/gaes_teams/' + path + '">' + path + '</a></font></center>'
+
+
+def center_font_size(path):
+    return '<font size=5><center>' + str(path) + '</font></font></center>'
+
+
+def losses(path):
+    return '<b><font color="#AEA79F"><font size=5><center>' + str(path) + '</font></font></center></b>'
 
 
 def make_row_bold(path):
-    return '<b><font color="#46b957">' + str(path) + '</font></b>'
+    return '<b><font color="#46b957"><font size=5><center>' + str(path) + '</font></font></center></b>'
 
 
 @app.route("/")
@@ -102,6 +110,7 @@ def main():
                    ' standings ORDER BY win DESC, win_percentage DESC')
     scores = cursor.fetchall()
     scores = pd.DataFrame(scores, columns=['Player', 'Wins', 'Losses', 'Win PCT', 'Weighted Rank', 'Raw Rank'])
+    scores['Win PCT'] = round(scores['Win PCT'], 2)
     cursor.execute('SELECT timestamp FROM standings')
     recent_date = cursor.fetchone()[0]
     recent_date = pd.to_datetime(recent_date)
@@ -125,17 +134,23 @@ def main():
     scores_live.columns = ['Game', 'Current Period', 'Status']
     return render_template('view.html',
                            tables=[scores.to_html(index=False, classes=['table table-hover', 'table-light'],
-                                                  formatters=dict(Team1=path_to_image_html,
-                                                                  Team2=path_to_image_html,
-                                                                  Team3=path_to_image_html,
-                                                                  Player=path_to_more_stats_html,
-                                                                  Wins=make_row_bold),
-                                                  escape=False, justify='center', border=3).replace('<th>','<th class = "table-info">'), ],
-                           recent_date=recent_date, scores_live=[scores_live.to_html(index=False,
-                                                                                     classes=['table table-hover',
-                                                                                              'table-light'],
-                                                                                     escape=False, justify='center',
-                                                                                     border=3).replace('<th>','<th class = "table-info">'), ])
+                                                  formatters={'Team1': path_to_image_html,
+                                                              'Team2': path_to_image_html,
+                                                              'Team3': path_to_image_html,
+                                                              'Player': path_to_more_stats_html,
+                                                              'Wins': make_row_bold,
+                                                              'Losses': losses,
+                                                              'Win PCT': center_font_size,
+                                                              'Weighted Rank': center_font_size,
+                                                              'Raw Rank': center_font_size},
+                                                  escape=False,
+                                                  justify='center',
+                                                  border=3).replace('<th>', '<th class = "table-info">'), ],
+                           recent_date=recent_date,
+                           scores_live=[scores_live.to_html(index=False, classes=['table table-hover', 'table-light'],
+                                                            escape=False,
+                                                            justify='center',
+                                                            border=3).replace('<th>', '<th class = "table-info">'), ])
 
 
 @app.route('/gaes_teams/<variable>', methods=['GET'])
@@ -147,23 +162,28 @@ def get_team_records(variable):
                    variable)
     agg_scores = cursor.fetchall()
     agg_scores = pd.DataFrame(agg_scores, columns=['Wins', 'Losses', 'Win PCT', 'Weighted Rank', 'Raw Rank'])
-
+    agg_scores['Win PCT'] = round(agg_scores['Win PCT'], 2)
     cursor.execute('SELECT win, loss, team_nickname FROM standings_raw_single WHERE usr=\'%s\'' % variable)
     by_team_scores = cursor.fetchall()
-    by_team_scores = pd.DataFrame(by_team_scores, columns=['Wins', 'Losses', ' Team Name'])
+    by_team_scores = pd.DataFrame(by_team_scores, columns=['Wins', 'Losses', 'Team Name'])
     team_images = get_team_images()
-    team_images = team_images[team_images['Player']==variable]
+    team_images = team_images[team_images['Player'] == variable]
     team_1 = str(team_images['Team1'].values[0])
     team_2 = str(team_images['Team2'].values[0])
     team_3 = str(team_images['Team3'].values[0])
     rank = int(agg_scores['Raw Rank'].values[0])
     return render_template("team.html", team_table=[by_team_scores.to_html(index=False, classes=['table table-hover',
                                                                                                  'table-light'],
+                                                                           formatters={'Wins': make_row_bold,
+                                                                                       'Losses': losses,
+                                                                                       'Team Name': center_font_size},
                                                                            escape=False, justify='center', border=3
-                                                                           ).replace('<th>','<th class = "table-info">'), ],
+                                                                           ).replace('<th>',
+                                                                                     '<th class = "table-info">'), ],
                            agg_table=[agg_scores.to_html(index=False, classes=['table table-hover', 'table-light'],
                                                          escape=False,
-                                                         justify='center', border=3).replace('<th>','<th class = "table-info">'), ],
+                                                         justify='center',
+                                                         border=3).replace('<th>', '<th class = "table-info">'), ],
                            name=variable, team_1=team_1, team_2=team_2, team_3=team_3, rank=rank)
 
 
