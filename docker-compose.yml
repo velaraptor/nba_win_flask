@@ -5,18 +5,24 @@ services:
     build: ./nba_api_service
     volumes:
       - sql_live:/var/data
+    env_file:
+      - nba.env
 
   raw_nba_api:
     container_name: nba_raw_standings
     build: ./nba_raw_api_service
     volumes:
       - sql_live:/var/data
+    env_file:
+      - nba.env
 
   nba_scores_api:
     container_name: nba_scores
     build: ./nba_live_scores
     volumes:
       - sql_live:/var/data
+    env_file:
+      - nba.env
 
   flask_app:
     container_name: web_app
@@ -25,6 +31,8 @@ services:
       - "8080:80"
     volumes:
       - sql_live:/var/data
+    env_file:
+      - nba.env
 
 volumes:
   sql_live:

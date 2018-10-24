@@ -1,9 +1,8 @@
 from flask import Flask, render_template
 import sqlite3
 import pandas as pd
+import os
 
-SQL_CONNECTION = "/var/data/nba_win.db"
-# SQL_CONNECTION_local = "/Users/velaraptor/Desktop/nba_win.db"
 pd.set_option('display.max_colwidth', -1)
 
 GAME_STATUS = {
@@ -36,6 +35,7 @@ TEAMS = {'TOR': 0, 'PHX': 0, 'IND': 0,
          }
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
 
 
 def get_team_images():
@@ -82,6 +82,10 @@ def get_team_images():
     return imag
 
 
+def get_sql_connection():
+    return os.getenv('SQL_CONNECTION')
+
+
 def path_to_image_html(path):
     return '<center><img src="' + path + '"  width="100" height="100" /></center>'
 
@@ -104,7 +108,7 @@ def make_row_bold(path):
 
 @app.route("/")
 def main():
-    conn = sqlite3.connect(SQL_CONNECTION)
+    conn = sqlite3.connect(get_sql_connection())
     cursor = conn.cursor()
     cursor.execute('SELECT usr, win, loss, win_percentage, weighted_rank, raw_rank FROM'
                    ' standings ORDER BY win DESC, win_percentage DESC')
@@ -123,15 +127,16 @@ def main():
     scores_live = cursor.fetchall()
     scores_live = pd.DataFrame(scores_live, columns=[field[0] for field in cursor.description])
     scores_live = scores_live[['hUser', 'vUser', 'vTeamScore', 'vTeam', 'status', 'hTeamScore', 'hTeam',
-                               'game_activated', 'current_period']]
+                               'game_activated', 'current_period', 'clock']]
 
     scores_live['game'] = scores_live['hUser'] + ' (' + scores_live['hTeam'] + ') - <b>' + \
                           scores_live['hTeamScore'] + '</b> <br> ' + scores_live['vUser'] + \
                           ' (' + scores_live['vTeam'] + ') - <b>' + scores_live['vTeamScore'] + '</b>'
     scores_live['status'] = scores_live['status'].map(GAME_STATUS)
 
-    scores_live = scores_live[['game', 'current_period', 'status']]
-    scores_live.columns = ['Game', 'Current Period', 'Status']
+    scores_live = scores_live[['game', 'current_period', 'status', 'clock']]
+    scores_live.columns = ['Game', 'Current Period', 'Status', 'Time Left']
+    scores_live.loc[scores_live['Current Period']==5, 'Current Period'] = 'OT'
     return render_template('view.html',
                            tables=[scores.to_html(index=False, classes=['table table-hover', 'table-light'],
                                                   formatters={'Team1': path_to_image_html,
@@ -144,18 +149,20 @@ def main():
                                                               'Weighted Rank': center_font_size,
                                                               'Raw Rank': center_font_size},
                                                   escape=False,
+                                                  table_id='wins',
                                                   justify='center',
                                                   border=3).replace('<th>', '<th class = "table-info">'), ],
                            recent_date=recent_date,
                            scores_live=[scores_live.to_html(index=False, classes=['table table-hover', 'table-light'],
                                                             escape=False,
                                                             justify='center',
+                                                            table_id='live_scores',
                                                             border=3).replace('<th>', '<th class = "table-info">'), ])
 
 
 @app.route('/gaes_teams/<variable>', methods=['GET'])
 def get_team_records(variable):
-    conn = sqlite3.connect(SQL_CONNECTION)
+    conn = sqlite3.connect(get_sql_connection())
     cursor = conn.cursor()
 
     cursor.execute('SELECT win, loss, win_percentage, weighted_rank, raw_rank FROM standings WHERE usr =\'%s\'' %

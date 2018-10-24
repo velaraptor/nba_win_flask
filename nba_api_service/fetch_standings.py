@@ -5,7 +5,7 @@ from datetime import datetime
 import time
 import sqlite3
 import logging
-
+import os
 
 PLAYERS = {0: 'Chris',
            1: 'Luke',
@@ -31,7 +31,11 @@ TEAMS = {'TOR': 0, 'PHX': 0, 'IND': 0,
          'OKC': 9, 'WAS': 9, 'DAL': 9
          }
 
-SQL_CONNECTION = "/var/data/nba_win.db"
+
+def get_env():
+    sql_connection = os.getenv('SQL_CONNECTION')
+    time_value = os.getenv('NBA_WIN_TIME')
+    return {'SQL_CONNECTION': sql_connection, 'TIME': int(time_value)}
 
 
 def get_standings(logger):
@@ -56,7 +60,7 @@ def main():
 
     logger = logging.getLogger('nba-win-api')
     logging.getLogger().setLevel(logging.INFO)
-
+    env = get_env()
     while True:
         standings = get_standings(logger)
         recent_date = standings['_internal'].get('pubDateTime', datetime.now())
@@ -74,6 +78,8 @@ def main():
         if r.ok:
             meta = r.json()
         else:
+            logging.warning('Could not find meta NBA data')
+            logging.warning(str(r.ok))
             continue
 
         teams = json_normalize(meta['sports_content']['teams']['team'])
@@ -93,7 +99,7 @@ def main():
         standings_agg['user_name'] = standings_agg.index
         logger.info(standings_agg)
         if RUN_SQL is True:
-            conn = sqlite3.connect(SQL_CONNECTION)
+            conn = sqlite3.connect(env['SQL_CONNECTION'])
             standings_agg.to_sql('standings', con=conn, if_exists='replace')
             logger.info('successfully wrote to db')
             cursor = conn.cursor()
@@ -108,8 +114,8 @@ def main():
                 logger.info('new iteration putting data in standing_history')
                 standings_agg.to_sql('standings_history', con=conn, if_exists='append')
 
-        logger.info('Sleeping for 60 minutes....')
-        time.sleep(60 * 60)
+        logger.info('Sleeping for ' + str(env['TIME']) + ' minutes....')
+        time.sleep(60 * env['TIME'])
 
 
 if __name__ == "__main__":

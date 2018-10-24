@@ -5,6 +5,7 @@ import time
 import sqlite3
 import logging
 import pytz
+import os
 
 PLAYERS = {0: 'Chris',
            1: 'Luke',
@@ -30,7 +31,11 @@ TEAMS = {'TOR': 0, 'PHX': 0, 'IND': 0,
          'OKC': 9, 'WAS': 9, 'DAL': 9
          }
 
-SQL_CONNECTION = "/var/data/nba_win.db"
+
+def get_env():
+    sql_connection = os.getenv('SQL_CONNECTION')
+    time_value = os.getenv('LIVE_SCORE_TIME')
+    return {'SQL_CONNECTION': sql_connection, 'TIME': int(time_value)}
 
 
 def get_scores(logger):
@@ -38,12 +43,15 @@ def get_scores(logger):
     games = None
     clean_games = []
     i = 0
-    date_now = str(datetime.now(pytz.timezone('US/Central')).year) + str(
-        datetime.now(pytz.timezone('US/Central')).month) + str(datetime.now(pytz.timezone('US/Central')).day - i)
+    date_now = str(datetime.now(pytz.timezone('US/Pacific')).year) + str(
+        datetime.now(pytz.timezone('US/Pacific')).month) + str(datetime.now(pytz.timezone('US/Pacific')).day - i)
     url = 'http://data.nba.net/data/10s/prod/v2/' + date_now + '/scoreboard.json'
     r = requests.get(url=url)
     if r.ok:
         games = r.json().get('games', None)
+    else:
+        logging.warning('Could not find meta NBA data')
+        logging.warning(str(r.ok))
 
     if games:
         for g in games:
@@ -54,7 +62,8 @@ def get_scores(logger):
                           'vTeam': g['vTeam']['triCode'],
                           'hTeam': g['hTeam']['triCode'],
                           'vTeamScore': g['vTeam']['score'],
-                          'hTeamScore': g['hTeam']['score']
+                          'hTeamScore': g['hTeam']['score'],
+                          'clock': g['clock']
                           }
             print(clean_game)
             clean_games.append(clean_game)
@@ -67,18 +76,19 @@ def main():
 
     logger = logging.getLogger('nba-scores-api')
     logging.getLogger().setLevel(logging.INFO)
-
+    env = get_env()
     while True:
         scores = get_scores(logger)
         scores['hUser'] = scores['hTeam'].map(TEAMS).map(PLAYERS)
         scores['vUser'] = scores['vTeam'].map(TEAMS).map(PLAYERS)
 
         if RUN_SQL is True:
-            conn = sqlite3.connect(SQL_CONNECTION)
+            conn = sqlite3.connect(env['SQL_CONNECTION'])
             scores.to_sql('scores', con=conn, if_exists='replace')
             logger.info('successfully wrote to db')
-        logger.info('Sleep for 4 Minutes')
-        time.sleep(4 * 60)
+
+        logger.info('Sleeping for ' + str(env['TIME']) + ' minutes....')
+        time.sleep(60 * env['TIME'])
 
 
 if __name__ == "__main__":
