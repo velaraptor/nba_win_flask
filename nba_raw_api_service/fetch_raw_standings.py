@@ -56,7 +56,7 @@ def get_standings(logger):
 
 
 def main():
-    logging.basicConfig()
+    logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
     logger = logging.getLogger('nba-win-api')
     logging.getLogger().setLevel(logging.INFO)

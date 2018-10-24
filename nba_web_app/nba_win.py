@@ -130,13 +130,13 @@ def main():
                                'game_activated', 'current_period', 'clock']]
 
     scores_live['game'] = scores_live['hUser'] + ' (' + scores_live['hTeam'] + ') - <b>' + \
-                          scores_live['hTeamScore'] + '</b> <br> ' + scores_live['vUser'] + \
-                          ' (' + scores_live['vTeam'] + ') - <b>' + scores_live['vTeamScore'] + '</b>'
+        scores_live['hTeamScore'] + '</b> <br> ' + scores_live['vUser'] + \
+        ' (' + scores_live['vTeam'] + ') - <b>' + scores_live['vTeamScore'] + '</b>'
     scores_live['status'] = scores_live['status'].map(GAME_STATUS)
 
     scores_live = scores_live[['game', 'current_period', 'status', 'clock']]
     scores_live.columns = ['Game', 'Current Period', 'Status', 'Time Left']
-    scores_live.loc[scores_live['Current Period']==5, 'Current Period'] = 'OT'
+    scores_live.loc[scores_live['Current Period'] >= 5, 'Current Period'] = 'OT'
     return render_template('view.html',
                            tables=[scores.to_html(index=False, classes=['table table-hover', 'table-light'],
                                                   formatters={'Team1': path_to_image_html,
