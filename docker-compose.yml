@@ -34,5 +34,13 @@ services:
     env_file:
       - nba.env
 
+  ml_model:
+    container_name: nba_ml_model
+    build: ./ml_model
+    volumes:
+      - sql_live:/var/data
+    env_file:
+      - nba.env
+
 volumes:
   sql_live:
