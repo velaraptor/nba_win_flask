@@ -1,6 +1,6 @@
 import pandas as pd
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import sqlite3
 import logging
@@ -43,8 +43,8 @@ def get_scores(logger):
     games = None
     clean_games = []
     i = 0
-    date_now = str(datetime.now(pytz.timezone('US/Pacific')).year) + str(
-        datetime.now(pytz.timezone('US/Pacific')).month) + str(datetime.now(pytz.timezone('US/Pacific')).day - i)
+    date_now = datetime.now(pytz.timezone('US/Pacific')) - timedelta(days=i)
+    date_now = str(date_now.year) + str(date_now.strftime("%m")) + str(date_now.strftime("%d"))
     url = 'http://data.nba.net/data/10s/prod/v2/' + date_now + '/scoreboard.json'
     r = requests.get(url=url)
     if r.ok:

@@ -1,7 +1,7 @@
 import pandas as pd
 from pandas.io.json import json_normalize
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import sqlite3
 import logging
@@ -41,13 +41,15 @@ def get_env():
 def get_standings(logger):
     logger.info('Getting standings')
     i = 0
-    date_now = str(datetime.now().year) + str(datetime.now().month) + str(datetime.now().day - i)
+    date_now = datetime.now() - timedelta(days=i)
+    date_now = str(date_now.year) + str(date_now.strftime("%m")) + str(date_now.strftime("%d"))
     url = 'http://data.nba.net/data/10s/prod/v1/' + date_now + '/standings_all.json'
     r = requests.get(url=url)
     while not r.ok:
         i += 1
         logger.info('going back ' + str(i) + ' day')
-        date_now = str(datetime.now().year) + str(datetime.now().month) + str(datetime.now().day - i)
+        date_now = datetime.now() - timedelta(days=i)
+        date_now = str(date_now.year)  + str(date_now.strftime("%m")) + str(date_now.strftime("%d"))
         url = 'http://data.nba.net/data/10s/prod/v1/' + date_now + '/standings_all.json'
         r = requests.get(url=url)
 

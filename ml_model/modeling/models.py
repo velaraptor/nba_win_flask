@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from skgarden import RandomForestQuantileRegressor
-from soft_dtw import split_time_series
-from soft_dtw import MLP, Objective
+from modeling.soft_dtw import split_time_series
+from modeling.soft_dtw import MLP, Objective
 from chainer import training
 from chainer import iterators, optimizers
 from chainer.datasets import tuple_dataset
@@ -123,4 +123,4 @@ class ModelingWins:
         predictions_df = pd.DataFrame({'predictions': predictions, 'actual': actuals})
         self.__logging.info(predictions_df)
 
-        return networks, w, predictions_df
+        return networks, w, predictions_df, len_input, len_output

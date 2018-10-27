@@ -1,5 +1,13 @@
 version: '3'
 services:
+  nba_ml_standings_api:
+    container_name: nba_ml_standings_api
+    build: ./standings_for_ml
+    volumes:
+      - sql_live:/var/data
+    env_file:
+      - nba.env
+
   nba_api:
     container_name: nba_api
     build: ./nba_api_service
