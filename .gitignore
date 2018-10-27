@@ -2,5 +2,6 @@
 .idea/
 logs/*
 .ipynb_checkpoints/*
+jupyter_notebooks/history.csv
 jupyter_notebooks/.ipynb_checkpoints/*
 nba_web_app/__pycache__/
