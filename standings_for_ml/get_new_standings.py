@@ -6,6 +6,7 @@ import logging
 import sqlite3
 import os
 import time
+import pytz
 
 
 def get_env():
@@ -40,10 +41,18 @@ def main():
     env = get_env()
     logger.info('Getting standings')
     sleep_time = 20
-    # check if table is not empty 
+    # TODO: check if table is not empty
     for i in range(0, 300):
         start_date = datetime.strptime('10/16/2018', '%m/%d/%Y') + timedelta(days=i)
-        if start_date == datetime.now():
+        # TODO: this needs to be fix
+        logging.info(str(start_date.year) + str(start_date.strftime("%m")) +
+                     str(start_date.strftime("%d")) + ' ' + str(datetime.now(pytz.timezone('US/Pacific')).year) +
+                     str(datetime.now(pytz.timezone('US/Pacific')).strftime("%m")) +
+                     str(datetime.now(pytz.timezone('US/Pacific')).strftime("%d")))
+        if str(start_date.year) + str(start_date.strftime("%m")) + \
+                str(start_date.strftime("%d")) == str(datetime.now(pytz.timezone('US/Pacific')).year) + \
+                str(datetime.now(pytz.timezone('US/Pacific')).strftime("%m")) + \
+                str(datetime.now(pytz.timezone('US/Pacific')).strftime("%d")):
             sleep_time = 60 * 60 * 24
             logger.info('Same day')
 

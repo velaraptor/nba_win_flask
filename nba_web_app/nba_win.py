@@ -194,5 +194,15 @@ def get_team_records(variable):
                            name=variable, team_1=team_1, team_2=team_2, team_3=team_3, rank=rank)
 
 
+@app.route('/predictions')
+def get_predictions():
+    conn = sqlite3.connect(get_sql_connection())
+    cursor = conn.cursor()
+    cursor.execute('SELECT team, predictions, array, high, point, low, user FROM ml_predictions')
+    predictions = cursor.fetchall()
+    predictions = pd.DataFrame(predictions, columns=[field[0] for field in cursor.description])
+    return predictions.to_html(index=False)
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=80)
