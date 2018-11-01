@@ -198,9 +198,10 @@ def get_team_records(variable):
 def get_predictions():
     conn = sqlite3.connect(get_sql_connection())
     cursor = conn.cursor()
-    cursor.execute('SELECT team, predictions, array, high, point, low, user FROM ml_predictions')
+    cursor.execute('SELECT team, predictions, actual_array, array, high, point, low, user FROM ml_predictions')
     predictions = cursor.fetchall()
     predictions = pd.DataFrame(predictions, columns=[field[0] for field in cursor.description])
+
     return predictions.to_html(index=False)
 
 
