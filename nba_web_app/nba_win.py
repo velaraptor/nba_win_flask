@@ -2,7 +2,11 @@ from flask import Flask, render_template
 import sqlite3
 import pandas as pd
 import os
-
+from bokeh.models import ColumnDataSource, HoverTool
+import ast
+import numpy as np
+from bokeh.plotting import figure
+from bokeh.embed import components
 pd.set_option('display.max_colwidth', -1)
 
 GAME_STATUS = {
@@ -202,7 +206,37 @@ def get_predictions():
     predictions = cursor.fetchall()
     predictions = pd.DataFrame(predictions, columns=[field[0] for field in cursor.description])
 
-    return predictions.to_html(index=False)
+    user_predictions = pd.DataFrame(predictions.groupby('user')['predictions'].sum().sort_values(ascending=False))
+
+    pp = predictions['actual_array'].apply(ast.literal_eval) + predictions['array'].apply(ast.literal_eval).values
+
+    pp = pd.DataFrame([g for g in pp])
+    x_values = pd.DataFrame([np.arange(1, pp.shape[1] + 1) for g in range(0, 30)])
+    data = {'xs': x_values.values.tolist(),
+            'ys': pp.values.tolist(),
+            'labels': predictions['team'].values,
+            'colors': ['#e21a37', '#000000', '#00611b', '#00848e', '#b00203', '#860038', '#006bb6', '#0e2240',
+                       '#fa002c',
+                       '#003399', '#cd212b', '#ffb517', '#ed174b', '#fdba33', '#5d76a9', '#98002e', '#00471b',
+                       '#2b6291',
+                       '#0c2340', '#f58426', '#002d62', '#0077c0', '#ef0022', '#e76221', '#cc0000', '#51388a',
+                       '#959191', '#bd1b21',
+                       '#f9a11e', '#cf142b']}
+
+    source = ColumnDataSource(data)
+
+    p = figure(width=1000, height=600)
+    p.multi_line(xs='xs', ys='ys', source=source, line_color='colors', line_width=5)
+    p.add_tools(HoverTool(show_arrow=False, line_policy='nearest', tooltips=[('Team', '@labels'), ('Wins', '$y'), ('Week', '$x') ]))
+    script, div = components(p)
+    return render_template('plots.html',
+                           tables=[predictions[['team', 'predictions', 'high', 'point', 'low', 'user']].to_html(index=False,
+                                                       escape=False,justify='center',
+                                                         border=3,
+                                                       classes=['table table-hover', 'table-light']), ],
+                           user_table=[user_predictions.to_html(justify='center',
+                                                         border=3, escape=False, classes=['table table-hover', 'table-light']), ],
+                           script=script, div=div)
 
 
 if __name__ == "__main__":

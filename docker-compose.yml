@@ -50,5 +50,16 @@ services:
     env_file:
       - nba.env
 
+  datascience-notebook:
+    image: jupyter/datascience-notebook
+    volumes:
+      - sql_live:/var/data
+    env_file:
+      - nba.env
+    ports:
+      - "8888:8888"
+    container_name: jupyter_notebook
+    command: "start-notebook.sh"
+
 volumes:
   sql_live:

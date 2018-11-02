@@ -1,0 +1,51 @@
+<!doctype html>
+<head>
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="https://bootswatch.com/_vendor/bootstrap/dist/js/bootstrap.min.js"></script>
+    <link href="https://bootswatch.com/4/united/bootstrap.min.css" rel="stylesheet">
+    <link
+    href="http://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css"
+    rel="stylesheet" type="text/css">
+<link
+    href="http://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.css"
+    rel="stylesheet" type="text/css">
+
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.js"></script>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.js"></script>
+    <title>GAES NBA Win Live Standings</title>
+
+</head>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <a class="navbar-brand" href="#">GAES NBA Win Live Standings</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+     <div class="collapse navbar-collapse" id="navbarColor01">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="/">Home</a>
+      <li class="nav-item">
+        <a class="nav-link" href="/predictions">Predictions</a>
+      </li>
+    </ul>
+
+      </div>
+</nav>
+<div class="jumbotron">
+      <h1>NBA Wins Pool Predictions</h1>
+        <h4> Graph for Season</h4>
+    {{ script|safe }}
+{{ div|safe }}
+     {% for table in user_table %}
+    {{ table|safe }}
+  {% endfor %}
+    <hr>
+
+  {% for table in tables %}
+    {{ table|safe }}
+  {% endfor %}
+    <hr>
+
+
+</div>
