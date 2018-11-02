@@ -225,9 +225,11 @@ def get_predictions():
 
     source = ColumnDataSource(data)
 
-    p = figure(width=1000, height=600)
-    p.multi_line(xs='xs', ys='ys', source=source, line_color='colors', line_width=5)
-    p.add_tools(HoverTool(show_arrow=False, line_policy='nearest', tooltips=[('Team', '@labels'), ('Wins', '$y'), ('Week', '$x') ]))
+    p = figure(plot_width=400, plot_height=400)
+    p.toolbar.logo = None
+    p.sizing_mode = 'stretch_both'
+    p.multi_line(xs='xs', ys='ys', source=source, line_color='colors', line_width=2)
+    p.add_tools(HoverTool(show_arrow=True, line_policy='nearest', tooltips=[('Team', '@labels'), ('Wins', '$y'), ('Week', '$x') ]))
     script, div = components(p)
     return render_template('plots.html',
                            tables=[predictions[['team', 'predictions', 'high', 'point', 'low', 'user']].to_html(index=False,
